@@ -1,0 +1,19 @@
+name: kt-template
+version: "0.1.0"
+description: "Starter KohakuTerrarium package with creature, terrarium, and module templates"
+
+creatures:
+  - name: template-creature
+
+terrariums:
+  - name: template-team
+
+tools:
+  - name: template_package_tool
+    module: kt_template.tools.package_tool
+    class: TemplatePackageTool
+
+plugins:
+  - name: template_package_plugin
+    module: kt_template.plugins.package_plugin
+    class: TemplatePackagePlugin

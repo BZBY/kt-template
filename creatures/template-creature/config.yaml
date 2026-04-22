@@ -1,0 +1,226 @@
+# Standalone creature template.
+#
+# This file is intentionally verbose and heavily commented so it can be used as
+# a copy-paste starting point for real projects.
+#
+# A creature is a self-contained agent: prompt, tools, triggers, sub-agents,
+# memory, I/O, and plugins all live here.
+#
+# Run this creature directly:
+#   kt run kt-template/creatures/template-creature
+#
+# After installing this folder as a package:
+#   kt run @kt-template/creatures/template-creature
+
+name: template-creature
+version: "0.1.0"
+
+# Optional inheritance.
+# Point this at another creature if you want to extend it instead of starting
+# from scratch. Relative paths resolve from this creature folder.
+# base_config: "@kt-biome/creatures/general"
+
+controller:
+  # You can use an LLM profile name if you keep profiles in
+  # ~/.kohakuterrarium/llm_profiles.yaml.
+  llm: "${KT_LLM_PROFILE:}"
+
+  # Or set inline provider details directly.
+  # If llm is non-empty, it wins over the inline fields below.
+  model: "${OPENROUTER_MODEL:google/gemini-2.5-flash}"
+  api_key_env: OPENROUTER_API_KEY
+  base_url: https://openrouter.ai/api/v1
+
+  temperature: 0.2
+  reasoning_effort: medium
+
+  # Tool call syntax emitted by the model.
+  # Valid values include: bracket, xml, native.
+  tool_format: bracket
+
+  # dynamic = one-line tool list + use info on demand
+  # static  = full docs in the system prompt up front
+  skill_mode: dynamic
+
+  include_tools_in_prompt: true
+  include_hints_in_prompt: true
+  max_messages: 64
+  ephemeral: false
+
+# Keep the real persona/instructions in a markdown file.
+system_prompt_file: prompts/system.md
+
+# Files injected into the prompt as {{ variable_name }}.
+prompt_context_files:
+  style_guide: prompts/style.md
+  project_context: memory/project.md
+  scratch_context: memory/notes.md
+
+# Input module.
+# Built-ins include cli, cli_nonblocking, tui, none.
+input:
+  type: cli
+  prompt: "template> "
+
+  # To use the local custom input template instead, switch to:
+  # type: custom
+  # module: ./inputs/example_input.py
+  # class: ExampleInputModule
+  # source: template_input
+  # seed_messages:
+  #   - "Kick off the first synthetic event"
+  #   - "Then queue a second one"
+
+  # To use a package module instead of a local file, switch to:
+  # type: package
+  # module: kt_template.inputs.package_input
+  # class: TemplatePackageInput
+  # source: template_package_input
+
+# Output module.
+output:
+  type: stdout
+  controller_direct: true
+
+  # To use the local custom output template instead, switch to:
+  # type: custom
+  # module: ./outputs/example_output.py
+  # class: ExampleOutputModule
+  # path: ./output.log
+  # prefix: "[template-output]"
+
+  # Named outputs are optional side-channels. Tools or sub-agents can route to
+  # them explicitly if you wire that behavior into your own code.
+  named_outputs:
+    {}
+
+# Autonomous triggers.
+# A creature without triggers only acts on user input (or terrarium events).
+triggers:
+  # Example built-in timer trigger.
+  # - type: timer
+  #   interval: 300
+  #   immediate: true
+  #   prompt: "Perform your periodic check-in."
+
+  # Example local custom trigger.
+  # - type: custom
+  #   module: ./triggers/example_trigger.py
+  #   class: ExampleTrigger
+  #   interval: 60
+  #   message: "Local custom trigger fired."
+  #   prompt: "React to the trigger event."
+
+  # Example package trigger.
+  # - type: package
+  #   module: kt_template.triggers.package_trigger
+  #   class: TemplatePackageTrigger
+  #   interval: 120
+  #   message: "Package trigger fired."
+  []
+
+# Tools available to the controller.
+# Built-ins can be declared in shorthand or full form.
+tools:
+  - name: info
+    type: builtin
+  - name: think
+    type: builtin
+  - name: read
+    type: builtin
+  - name: write
+    type: builtin
+  - name: edit
+    type: builtin
+  - name: glob
+    type: builtin
+  - name: grep
+    type: builtin
+  - name: tree
+    type: builtin
+  - name: ask_user
+    type: builtin
+
+  # Local custom tool template.
+  # Extra constructor args are inline for tools in this codebase.
+  # - name: template_tool
+  #   type: custom
+  #   module: ./tools/example_tool.py
+  #   class: ExampleTool
+  #   greeting: "Hello from your own tool"
+  #   include_working_dir: true
+
+  # Package tool template declared in kohaku.yaml.
+  # Because it is published in the package manifest, only the name is required.
+  # - name: template_package_tool
+  #   type: package
+
+# Sub-agents are usually config exports, not subclasses.
+subagents:
+  - name: plan
+    type: builtin
+  - name: summarize
+    type: builtin
+
+  # Local custom sub-agent config export.
+  # - name: example_subagent
+  #   type: custom
+  #   module: ./subagents/example_subagent.py
+  #   config: EXAMPLE_SUBAGENT_CONFIG
+
+  # Package sub-agent config export.
+  # - name: template_package_subagent
+  #   type: package
+  #   module: kt_template.subagents.package_subagent
+  #   config: TEMPLATE_PACKAGE_SUBAGENT_CONFIG
+
+# Plugins hook the seams between LLM/tool/sub-agent execution.
+# Unlike tools/inputs/outputs/triggers, plugin kwargs live under `options:`.
+plugins:
+  # Local plugin example.
+  # - name: example_plugin
+  #   type: custom
+  #   module: ./plugins/example_plugin.py
+  #   class: ExamplePlugin
+  #   options:
+  #     note: "template plugin active"
+  #     block_keyword: "rm -rf"
+
+  # Package plugin from kohaku.yaml. Name-only works because the package
+  # manifest advertises it.
+  # - name: template_package_plugin
+  #   options:
+  #     note: "package plugin active"
+  []
+
+# Fires once when the creature starts.
+# startup_trigger:
+#   prompt: "Review the workspace and propose a plan."
+
+# Optional safety rails for long-running creatures.
+termination:
+  max_turns: 0
+  max_duration: 0
+  idle_timeout: 0
+
+# Session memory folder used by memory tools / patterns.
+memory:
+  path: ./memory
+  init_files:
+    - project.md
+  writable_files:
+    - notes.md
+
+# Optional compaction settings for long sessions.
+# compact:
+#   enabled: true
+#   threshold: 0.8
+#   target: 0.5
+#   keep_recent_turns: 5
+
+# Optional framework-level turn-end routing.
+# Useful in terrariums or embedded workflows.
+# output_wiring:
+#   - some_other_creature
+#   - to: root
+#     with_content: false

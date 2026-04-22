@@ -1,0 +1,72 @@
+# Terrarium template.
+#
+# A terrarium is wiring, not intelligence. It owns channels, creature startup,
+# and optional root orchestration.
+#
+# Run it with:
+#   kt terrarium run kt-template/terrariums/template-team
+
+terrarium:
+  name: template-team
+
+  # Optional root creature. The root sits outside the team and gets the
+  # terrarium-management tools plus a topology-aware prompt section.
+  root:
+    name: template-root
+    controller:
+      model: "${OPENROUTER_MODEL:google/gemini-2.5-flash}"
+      api_key_env: OPENROUTER_API_KEY
+      base_url: https://openrouter.ai/api/v1
+      temperature: 0.2
+      tool_format: bracket
+    system_prompt_file: prompts/root.md
+    tools:
+      - name: think
+        type: builtin
+      - name: ask_user
+        type: builtin
+
+  creatures:
+    - name: intake
+      # `base_config` points at a normal creature folder.
+      base_config: ./creatures/intake
+      channels:
+        listen: [requests, team_chat]
+        can_send: [work_items, team_chat]
+
+    - name: maker
+      base_config: ./creatures/maker
+      channels:
+        listen: [work_items, revisions, team_chat]
+        can_send: [review_queue, team_chat]
+      # Example output wiring: every completed turn pings the root even if the
+      # creature never remembers to call send_message.
+      output_wiring:
+        - to: root
+          with_content: false
+
+    - name: reviewer
+      base_config: ./creatures/reviewer
+      channels:
+        listen: [review_queue, team_chat]
+        can_send: [results, revisions, team_chat]
+
+  channels:
+    requests:
+      type: queue
+      description: "Incoming user requests for the team"
+    work_items:
+      type: queue
+      description: "Concrete tasks sent from intake to maker"
+    review_queue:
+      type: queue
+      description: "Work waiting for review"
+    revisions:
+      type: queue
+      description: "Requested changes sent back to maker"
+    results:
+      type: queue
+      description: "Final approved results"
+    team_chat:
+      type: broadcast
+      description: "Optional status chatter visible to the whole team"

@@ -1,0 +1,26 @@
+# Intake creature.
+#
+# This role receives user requests from the `requests` channel, clarifies or
+# decomposes them, and forwards concrete work to `work_items`.
+
+name: intake
+version: "0.1.0"
+
+controller:
+  model: "${OPENROUTER_MODEL:google/gemini-2.5-flash}"
+  api_key_env: OPENROUTER_API_KEY
+  base_url: https://openrouter.ai/api/v1
+  temperature: 0.2
+  tool_format: bracket
+
+system_prompt_file: prompts/system.md
+
+tools:
+  - name: think
+    type: builtin
+  - name: info
+    type: builtin
+  - name: ask_user
+    type: builtin
+
+# `send_message` is auto-added by terrarium wiring; no need to declare it here.

@@ -1,0 +1,3 @@
+from .package_subagent import TEMPLATE_PACKAGE_SUBAGENT_CONFIG
+
+__all__ = ["TEMPLATE_PACKAGE_SUBAGENT_CONFIG"]
