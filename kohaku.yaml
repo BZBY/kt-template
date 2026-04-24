@@ -13,7 +13,27 @@ tools:
     module: kt_template.tools.package_tool
     class: TemplatePackageTool
 
+subagents:
+  - name: template_package_subagent
+    module: kt_template.subagents.package_subagent
+    # Sub-agents are config objects (SubAgentConfig), not classes —
+    # the framework finds them by scanning the module for a
+    # SubAgentConfig instance. No `class:` field needed.
+
+triggers:
+  - name: template_package_trigger
+    module: kt_template.triggers.package_trigger
+    class: TemplatePackageTrigger
+
 plugins:
   - name: template_package_plugin
     module: kt_template.plugins.package_plugin
     class: TemplatePackagePlugin
+
+io:
+  - name: template_package_input
+    module: kt_template.inputs.package_input
+    class: TemplatePackageInput
+  - name: template_package_output
+    module: kt_template.outputs.package_output
+    class: TemplatePackageOutput
